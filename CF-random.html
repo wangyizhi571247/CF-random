@@ -1,5 +1,5 @@
 <!-- by @wangyizhi571247 -->
-<!-- version 1.0 -->
+<!-- version 1.1 -->
 
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -13,46 +13,83 @@
 /* div */
 div.divList
 {
-	margin-left: 20px;
-	height: 350px;
-	width: 600px;
-	float: left;
+    margin-left: 20px;
+    height: 350px;
+    width: 600px;
+    float: left;
 }
 div.divArea
 {
-	margin-left: 20px;
+    margin-left: 20px;
+}
+div.divProblem
+{
+    font-size: 12px;
 }
 /* a */
 a.aText
 {
-	font-size: 12px;
+    font-size: 12px;
+}
+a.aFootLink
+{
+    font-size: 10px;
+    text-decoration: none;
+    /* (52,152,219) */
+    color: #172ada;
+    font-weight: bold;
+}
+a.aProblemLink /* without underline */
+{
+    font-size: 15px;
+    text-decoration: none;
+    /* (52,152,219) */
+    color: #42a0c3;
+    font-weight: bold;
 }
 /* p */
 p.pText
 {
-	font-size: 12px;
+    font-size: 12px;
 }
 /* select */
 select.selectBox100
 {
-	width: 100px;
+    width: 100px;
 }
 /* input */
 input.inputBox150
 {
-	width: 150px;
-	height: 15px;
-	font-size: 12px;
+    width: 150px;
+    height: 15px;
+    font-size: 12px;
 }
 /* button */
 button.buttonRandom /* unique */
 {
-	margin-left: 200px; /* i don't know whyyyyyyyy */
+    margin-left: 200px; /* i don't know whyyyyyyyy */
+}
+button.buttonNoBorder /* button without border */
+{
+    font-size: 12px;
+    border: none;
+    background-color: #ffc8c8;
+    color: #ef5151;
 }
 </style>
 <body>
-	<!-- js for fecting problems and get problems -->
+	<!-- jss -->
 	<script>
+/*
+	structure of a problem:
+	contestId: int
+	index: string
+	name: string
+	rating: int
+	tags: array(string)
+	type: string
+*/
+
 		// get a random interger in [l,r]
 		function randint(l,r)
 		{
@@ -63,9 +100,136 @@ button.buttonRandom /* unique */
 		{
 			return Array.from(new Set(arr));
 		}
+
+
+
+	//--------------------------
+	// important variables
+
 		var fetched=0; // to check whether the problemset is fetched
 		var problemset; // whole problemset
 		var randomlist=new Array(); // problems which are chosen
+
+	// ---------------------------
+	// functions
+
+		// set local storage of randomlist
+		function setRandomlistStorage()
+		{
+			localStorage.setItem("randomlist",JSON.stringify(randomlist));
+			console.log(localStorage);
+		}
+		// get local storage of randomlist
+		function getRandomlistStorage()
+		{
+			randomlist=JSON.parse(localStorage.getItem("randomlist"));
+			if(randomlist==null) randomlist=new Array();
+			console.log(randomlist);
+
+			// add problems!!!!
+			for(const problem of randomlist)
+			{
+				addProblem(problem);
+			}
+		}
+
+		// set local storage of randomlist
+		function setTagStorage()
+		{
+			const includedTags=document.getElementById("included-tags").value;
+			const excludedTags=document.getElementById("excluded-tags").value;
+			localStorage.setItem("includedTags",includedTags);
+			localStorage.setItem("excludedTags",excludedTags);
+			console.log(localStorage);
+		}
+		// get local storage of randomlist
+		function getTagStorage()
+		{
+			var includedTags=localStorage.getItem("includedTags");
+			var excludedTags=localStorage.getItem("excludedTags");
+
+			if(includedTags==null) includedTags="";
+			if(excludedTags==null) excludedTags="";
+
+			console.log(includedTags);
+			console.log(excludedTags);
+
+			inputIncludedTag(includedTags);
+			inputExcludedTag(excludedTags);
+		}
+
+		// set local storage of randomlist
+		function setDifficultyStorage()
+		{
+			const minDifficulty=document.getElementById("min-difficulty").value;
+			const maxDifficulty=document.getElementById("max-difficulty").value;
+			localStorage.setItem("minDifficulty",minDifficulty);
+			localStorage.setItem("maxDifficulty",maxDifficulty);
+			console.log(localStorage);
+		}
+		// get local storage of randomlist
+		function getDifficultyStorage()
+		{
+			var minDifficulty=localStorage.getItem("minDifficulty");
+			var maxDifficulty=localStorage.getItem("maxDifficulty");
+
+			if(minDifficulty==null) minDifficulty=800;
+			if(maxDifficulty==null) maxDifficulty=3500;
+
+			console.log(minDifficulty);
+			console.log(maxDifficulty);
+
+			document.getElementById("min-difficulty").value=minDifficulty;
+			document.getElementById("max-difficulty").value=maxDifficulty;
+		}
+
+		// set local storage of "use-prefix-CF" and "use-luogu-link"
+		function setCheckboxStorage()
+		{
+			const useluogulink=document.getElementById("use-luogu-link").checked;
+			const useprefixCF=document.getElementById("use-prefix-CF").checked;
+			localStorage.setItem("useLuoguLink",useluogulink);
+			localStorage.setItem("usePrefixCF",useprefixCF);
+			console.log(localStorage);
+		}
+		// get local storage
+		function getCheckboxStorage()
+		{
+			var useluogulink=localStorage.getItem("useLuoguLink");
+			var useprefixCF=localStorage.getItem("usePrefixCF");
+
+			useluogulink=(useluogulink=="true");
+			useprefixCF=(useprefixCF=="true");
+
+			// console.log(useluogulink);
+			// console.log(useprefixCF);
+
+			document.getElementById("use-luogu-link").checked=useluogulink;
+			document.getElementById("use-prefix-CF").checked=useprefixCF;
+		}
+
+		function setAllStorage()
+		{
+			setRandomlistStorage();
+			setTagStorage();
+			setDifficultyStorage();
+			setCheckboxStorage();
+		}
+		function getAllStorage()
+		{
+			getRandomlistStorage();
+			getTagStorage();
+			getDifficultyStorage();
+			getCheckboxStorage();
+		}
+
+		// process after loading
+		document.addEventListener("DOMContentLoaded", function() {
+			console.log("DOM Content loaded.");
+			getAllStorage();
+		});
+
+
 		// fetch the whole problemset
 		function fetchProblems(callback)
 		{
@@ -74,7 +238,7 @@ button.buttonRandom /* unique */
 				callback();
 				return;
 			}
-			document.getElementById("random-main").disabled=true;
+			// document.getElementById("random-main").disabled=true;
 			fetch('https://codeforces.com/api/problemset.problems')
 				.then(response=>{
 					return response.json();
@@ -90,41 +254,59 @@ button.buttonRandom /* unique */
 					callback();
 				});
 		}
-		/*
-		structure of a problem:
-			contestId: int
-			index: string
-			name: string
-			rating: int
-			tags: array(string)
-			type: string
-		*/
-		// create a new element with link (a href)
-		function newProblemLinker(problem)
+
+		// create a new element of the problem
+		// div class: divProblem
+		// a (with href) class: aProblemLink (without underline)
+		// add problem to div class=randomlistProblems
+		function addProblem(problem)
 		{
-			const element=document.createElement("a");
-			element.text=problem.contestId+problem.index+" "+problem.name+"("+problem.rating+")";
+			console.log(`add ${problem}`);
+
+			const text=problem.contestId+problem.index+" "+problem.name+"("+problem.rating+")";
 
 			// if checkbox "use-luogu-link" is checked, use "luogu.com.cn/problem/CF*"
 			// otherwise use "codeforces.com/problemset/problem/*"
 			const useluogulink=document.getElementById("use-luogu-link").checked;
 			if(useluogulink) console.log("use-luogu-link on");
+			
 			var link;
 			if(useluogulink) link="https://www.luogu.com.cn/problem/CF"+problem.contestId+problem.index;
 			else link="https://codeforces.com/problemset/problem/"+problem.contestId+"/"+problem.index;
 			console.log(link);
-			element.href=link;
 
-			element.target="_blank";
-			element.rel="noopener noreferrer";
-			return element;
+			const divElement=document.createElement("div");
+			divElement.className="divProblem";
+
+			const aElement=document.createElement("a");
+			aElement.className="aProblemLink";
+			
+			aElement.text=text;
+			aElement.href=link;
+
+			const ID=String(randint(0,2147483647));
+			divElement.id=ID;
+
+			const buttonElement=document.createElement("button");
+			buttonElement.className="buttonNoBorder";
+			buttonElement.textContent="delete";
+			buttonElement.onclick=function()
+			{
+				randomlist.splice(randomlist.indexOf(problem),1);
+
+				setAllStorage();
+				
+				document.getElementById(ID).remove();
+			};
+
+			divElement.appendChild(aElement);
+			divElement.appendChild(buttonElement);
+
+			const Element=document.getElementById("randomlistProblems");
+			
+			Element.appendChild(divElement);
 		}
-		// create a new br element
-		function newBrElement()
-		{
-			const element=document.createElement("br");
-			return element;
-		}
+		
 		// user-main
 		// run only when click botton "random-main"
 		function main()
@@ -193,17 +375,65 @@ button.buttonRandom /* unique */
 				const randpos=randint(0,length-1);
 				console.log(randpos);
 				const problem=problemfilter[randpos];
-				console.log(problem);
+
+				addProblem(problem);
 				randomlist.push(problem);
 
-				// add the problem to div class=randomlist
-				const Element=document.getElementById("randomlistProblems");
-				console.log(Element);
-				// add a
-				Element.appendChild(newProblemLinker(problem));
-				// add br
-				Element.appendChild(newBrElement());
+				setAllStorage();
 			});
+		}
+
+		// clear the randomlist
+		function clearRandomlist()
+		{
+			const check=window.confirm("are you sure?");
+
+			if(!check) return;
+
+			randomlist=new Array();
+
+			// delete all elements of div 
+			const Element=document.getElementById("randomlistProblems");
+			while(Element.lastChild!=null)
+			{
+				Element.removeChild(Element.lastChild);
+			}
+
+			setAllStorage();
+		}
+		// copy text to clip
+		function copyToClip(text)
+		{
+			var aux=document.createElement("input");
+			aux.setAttribute("value",text);
+			document.body.appendChild(aux);
+			aux.select();
+			document.execCommand("copy");
+			document.body.removeChild(aux);
+		}
+		// export the randomlist (copy to the clipboard)
+		function copyRandomlist()
+		{
+			var prefix="";
+			
+			const prefixCFElement=document.getElementById("use-prefix-CF");
+			if(prefixCFElement.checked) prefix="CF";
+
+			console.log(`prefix: ${prefix}`);
+
+			var str=new String(); // string to output
+			// for all problems in random list, add its index
+			for(pos=0;pos<randomlist.length;pos++)
+			{
+				const problem=randomlist[pos];
+				if(pos!=0) str+=",";
+				str+=prefix+problem.contestId+problem.index;
+			}
+			console.log(str);
+			// copy to the clipboard
+			// navigator.clipboard.writeText(str); // only support for Edge
+			copyToClip(str);
+			console.log("copied");
 		}
 	</script>
 	<!-- for filter -->
@@ -281,15 +511,19 @@ button.buttonRandom /* unique */
 		<div id="includedtagsSelector" class="divArea">
 			<!-- js for selector -->
 			<script>
+				function inputIncludedTag(newtag)
+				{
+					console.log(`include ${newtag}`);
+					const inputElement=document.getElementById("included-tags");
+					if(inputElement.value!="") inputElement.value+=",";
+					inputElement.value+=newtag;
+				}
 				// add the tag selected currently to input box
 				function addIncludedTag()
 				{
 					const selectorElement=document.getElementById("included-tags-selector");
 					const newtag=selectorElement.value;
-					console.log(`include ${newtag}`);
-					const inputElement=document.getElementById("included-tags");
-					if(inputElement.value!="") inputElement.value+=",";
-					inputElement.value+=newtag;
+					inputIncludedTag(newtag);
 				}
 				// clear inputbox
 				function clearIncludedTag()
@@ -349,15 +583,19 @@ button.buttonRandom /* unique */
 		<div id="excludedtagsSelector" class="divArea">
 			<!-- js for selector -->
 			<script>
+				function inputExcludedTag(newtag)
+				{
+					console.log(`exclude ${newtag}`);
+					const inputElement=document.getElementById("excluded-tags");
+					if(inputElement.value!="") inputElement.value+=",";
+					inputElement.value+=newtag;
+				}
 				// add the tag selected currently to input box
 				function addExcludedTag()
 				{
 					const selectorElement=document.getElementById("excluded-tags-selector");
 					const newtag=selectorElement.value;
-					console.log(`include ${newtag}`);
-					const inputElement=document.getElementById("excluded-tags");
-					if(inputElement.value!="") inputElement.value+=",";
-					inputElement.value+=newtag;
+					inputExcludedTag(newtag);
 				}
 				// clear inputbox
 				function clearExcludedTag()
@@ -425,61 +663,12 @@ button.buttonRandom /* unique */
 		<br><br>
 		<div>
 			<p class="pText">
-			by <a href="https://github.com/wangyizhi571247">wangyizhi571247</a>
-			<a href="https://github.com/wangyizhi571247/CF-random">CF-random(github)</a>
+			by <a href="https://github.com/wangyizhi571247" class="aFootLink">wangyizhi571247</a>
+			,
+			<a href="https://github.com/wangyizhi571247/CF-random" class="aFootLink">CF-random(github)</a>
 			</p>
 		</div>
 	</div>
-	<!-- js for random list -->
-	<script>
-		// clear the randomlist
-		function clearRandomlist()
-		{
-			randomlist=new Array();
-
-			// delete all elements of div 
-			const Element=document.getElementById("randomlistProblems");
-			while(Element.lastChild!=null)
-			{
-				Element.removeChild(Element.lastChild);
-			}
-		}
-		// copy text to clip
-		function copyToClip(text)
-		{
-			var aux=document.createElement("input");
-			aux.setAttribute("value",text);
-			document.body.appendChild(aux);
-			aux.select();
-			document.execCommand("copy");
-			document.body.removeChild(aux);
-		}
-		// export the randomlist (copy to the clipboard)
-		function copyRandomlist()
-		{
-			var prefix="";
-			
-			const prefixCFElement=document.getElementById("use-prefix-CF");
-			if(prefixCFElement.checked) prefix="CF";
-
-			console.log(`prefix: ${prefix}`);
-
-			var str=new String(); // string to output
-			// for all problems in random list, add its index
-			for(pos=0;pos<randomlist.length;pos++)
-			{
-				const problem=randomlist[pos];
-				if(pos!=0) str+=",";
-				str+=prefix+problem.contestId+problem.index;
-			}
-			console.log(str);
-			// copy to the clipboard
-			// navigator.clipboard.writeText(str); // only support for Edge
-			copyToClip(str);
-			console.log("copied");
-		}
-		
-	</script>
 	<!-- for randomlist -->
 	<div id="randomlist" class="divList">
 		<p>
